@@ -82,9 +82,12 @@ export function renderFretboard(
   const { exact, echoes } = computeFretboardPositions(tuning, midis, FRET_COUNT);
   let firstDot: { fret: number; node: SVGCircleElement } | null = null;
 
-  for (const { string: s, fret: f } of echoes) {
-    const x = f === 0 ? OPEN_X : (fx(f - 1) + fx(f)) / 2;
-    svgEl('circle', { class: 'ring', cx: x, cy: strY(s), r: 8 }, board.dotsGroup);
+  for (const pos of echoes) {
+    const x = pos.fret === 0 ? OPEN_X : (fx(pos.fret - 1) + fx(pos.fret)) / 2;
+    const y = strY(pos.string);
+    svgEl('circle', { class: 'ring', cx: x, cy: y, r: 8 }, board.dotsGroup);
+    const t = svgEl('text', { class: 'ringlabel', x, y }, board.dotsGroup);
+    t.textContent = pitchClassName(pos.midi, useFlats);
   }
   for (const pos of exact) {
     const x = pos.fret === 0 ? OPEN_X : (fx(pos.fret - 1) + fx(pos.fret)) / 2;

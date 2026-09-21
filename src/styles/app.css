@@ -134,6 +134,7 @@ section { margin-top: clamp(28px, 5vw, 44px); }
 .dot { fill: var(--signal); stroke: #fff; stroke-width: 2; }
 .dotlabel { font: 700 10px "Familjen Grotesk", system-ui, sans-serif; fill: #fff; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 .ring { fill: none; stroke: var(--signal); stroke-width: 2.5; }
+.ringlabel { font: 700 8px "Familjen Grotesk", system-ui, sans-serif; fill: var(--signal); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 
 .controls { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: end; }
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; color: var(--muted); }

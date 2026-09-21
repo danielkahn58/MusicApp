@@ -1,0 +1,41 @@
+/* All colors, sizes, and fonts as CSS variables, light and dark. */
+:root {
+  --paper: #E8ECE7;
+  --panel: #F3F5F1;
+  --ink: #15202B;
+  --muted: #55626E;
+  --line: #C7CFC8;
+  --signal-text: #2440D8;
+
+  /* instrument colours stay the same in both themes: they are physical objects */
+  --signal: #2F52F5;
+  --ivory: #FBFAF4;
+  --ebony: #1C1C22;
+  --key-line: #8B928D;
+  --echo-white: #C9D2FB;
+  --echo-black: #5468D8;
+  --maple: #DCC79F;
+  --maple-edge: #B79F72;
+  --fretwire: #8F8467;
+  --nut: #F3EFE2;
+  --string: #5C5648;
+  --inlay: #B09D74;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F151C;
+    --panel: #17202A;
+    --ink: #E7EBEF;
+    --muted: #9AA6B2;
+    --line: #2B3540;
+    --signal-text: #8AA0FF;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F151C;
+  --panel: #17202A;
+  --ink: #E7EBEF;
+  --muted: #9AA6B2;
+  --line: #2B3540;
+  --signal-text: #8AA0FF;
+}

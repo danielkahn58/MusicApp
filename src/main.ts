@@ -139,6 +139,13 @@ piano.svg.addEventListener('click', (e) => {
   pickNote(parseInt(midiAttr, 10));
 });
 
+fretboard.svg.addEventListener('click', (e) => {
+  const target = e.target as Element | null;
+  const midiAttr = target?.getAttribute?.('data-midi');
+  if (midiAttr === null || midiAttr === undefined) return;
+  pickNote(parseInt(midiAttr, 10));
+});
+
 const micHandlers: MicHandlers = {
   onTick(nowMs) {
     if (stabilizer.checkHold(nowMs)) {

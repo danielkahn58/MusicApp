@@ -3,7 +3,7 @@
 
 import { computeFretboardPositions, type FretPosition } from '../music/fretboard-positions';
 import type { Tuning } from '../music/tunings';
-import { noteName, pitchClassName } from '../music/notes';
+import { noteName, octaveOf, pitchClassName } from '../music/notes';
 import { svgEl, centerInScroller } from './svg';
 
 export const FRET_COUNT = 17;
@@ -63,6 +63,17 @@ function fretLabel(p: FretPosition): string {
   return p.fret === 0 ? `open string ${6 - p.string}` : `string ${6 - p.string}, fret ${p.fret}`;
 }
 
+// Pitch class at normal size, octave number after it as a smaller subscript
+// (e.g. "C" + small-raised "4"), so a marker reads "C4" without needing the
+// full name spelled out.
+function addNoteLabel(parent: SVGGElement, x: number, y: number, cls: string, midi: number, useFlats: boolean): void {
+  const t = svgEl('text', { class: cls, x, y }, parent);
+  const main = svgEl('tspan', {}, t);
+  main.textContent = pitchClassName(midi, useFlats);
+  const sub = svgEl('tspan', { class: `${cls}-oct`, dy: '2.5' }, t);
+  sub.textContent = String(octaveOf(midi));
+}
+
 // midis: 0 notes (nothing active), 1 note (sung/tapped), or several (a chord).
 export function renderFretboard(
   board: Fretboard,
@@ -85,16 +96,14 @@ export function renderFretboard(
   for (const pos of echoes) {
     const x = pos.fret === 0 ? OPEN_X : (fx(pos.fret - 1) + fx(pos.fret)) / 2;
     const y = strY(pos.string);
-    svgEl('circle', { class: 'ring', cx: x, cy: y, r: 8 }, board.dotsGroup);
-    const t = svgEl('text', { class: 'ringlabel', x, y }, board.dotsGroup);
-    t.textContent = pitchClassName(pos.midi, useFlats);
+    svgEl('circle', { class: 'ring', cx: x, cy: y, r: 10, 'data-midi': pos.midi }, board.dotsGroup);
+    addNoteLabel(board.dotsGroup, x, y, 'ringlabel', pos.midi, useFlats);
   }
   for (const pos of exact) {
     const x = pos.fret === 0 ? OPEN_X : (fx(pos.fret - 1) + fx(pos.fret)) / 2;
     const y = strY(pos.string);
-    const c = svgEl('circle', { class: 'dot', cx: x, cy: y, r: 11 }, board.dotsGroup);
-    const t = svgEl('text', { class: 'dotlabel', x, y }, board.dotsGroup);
-    t.textContent = pitchClassName(pos.midi, useFlats);
+    const c = svgEl('circle', { class: 'dot', cx: x, cy: y, r: 12, 'data-midi': pos.midi }, board.dotsGroup);
+    addNoteLabel(board.dotsGroup, x, y, 'dotlabel', pos.midi, useFlats);
     if (!firstDot || pos.fret < firstDot.fret) firstDot = { fret: pos.fret, node: c };
   }
 

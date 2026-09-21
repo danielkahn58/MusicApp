@@ -131,10 +131,12 @@ section { margin-top: clamp(28px, 5vw, 44px); }
 .gstring { stroke: var(--string); stroke-linecap: round; }
 .fretnum { font: 500 10px "Familjen Grotesk", system-ui, sans-serif; fill: var(--muted); text-anchor: middle; }
 .stringname { font: 600 12px "Familjen Grotesk", system-ui, sans-serif; fill: var(--muted); }
-.dot { fill: var(--signal); stroke: #fff; stroke-width: 2; }
+.dot { fill: var(--signal); stroke: #fff; stroke-width: 2; cursor: pointer; }
 .dotlabel { font: 700 10px "Familjen Grotesk", system-ui, sans-serif; fill: #fff; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
-.ring { fill: none; stroke: var(--signal); stroke-width: 2.5; }
-.ringlabel { font: 700 8px "Familjen Grotesk", system-ui, sans-serif; fill: var(--signal); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.dotlabel-oct { font-size: 7px; }
+.ring { fill: var(--ivory); stroke: var(--signal); stroke-width: 2.5; cursor: pointer; }
+.ringlabel { font: 700 9px "Familjen Grotesk", system-ui, sans-serif; fill: var(--signal); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.ringlabel-oct { font-size: 6.5px; }
 
 .controls { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: end; }
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; color: var(--muted); }

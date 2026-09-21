@@ -14,9 +14,53 @@ body {
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
-main { max-width: 1100px; margin: 0 auto; padding: clamp(16px, 4vw, 40px); }
-
+.layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(16px, 3vw, 32px);
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: clamp(16px, 4vw, 40px);
+}
 :focus-visible { outline: 3px solid var(--signal-text); outline-offset: 3px; }
+
+/* Chord sidebar */
+.chords {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 16px;
+  position: sticky;
+  top: 16px;
+}
+.chords h2 { margin-bottom: 4px; }
+.chords .hint { margin: 0 0 14px; }
+.chord-group + .chord-group { margin-top: 18px; }
+.chord-group h3 {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.chord-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.chordBtn {
+  font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--paper); color: var(--ink);
+  padding: 0.5em 0;
+}
+.chordBtn[aria-pressed="true"] { background: var(--signal); border-color: var(--signal); color: #fff; }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  .chords { position: static; }
+  .chord-grid { grid-template-columns: repeat(6, 1fr); }
+}
+@media (max-width: 640px) {
+  .chord-grid { grid-template-columns: repeat(4, 1fr); }
+}
 
 header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 h1 { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
@@ -45,7 +89,7 @@ h2 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 600; letter-spacing: -0.0
   transition: opacity 0.2s;
 }
 .note .oct { font-size: 0.3em; font-weight: 500; letter-spacing: 0; margin-left: 0.08em; }
-.readout[data-state="held"] .note, .readout[data-state="picked"] .note { opacity: 0.6; }
+.readout[data-state="held"] .note, .readout[data-state="picked"] .note, .readout[data-state="chord"] .note { opacity: 0.6; }
 .readout[data-state="empty"] .note { opacity: 0.3; }
 
 .meta { padding-bottom: 6px; max-width: 420px; }
@@ -76,7 +120,7 @@ section { margin-top: clamp(28px, 5vw, 44px); }
 .bkey.echo { fill: var(--echo-black); }
 .wkey.on, .bkey.on { fill: var(--signal); }
 .klabel { font: 600 9px "Familjen Grotesk", system-ui, sans-serif; fill: #7A817B; pointer-events: none; }
-#activeLabel { font: 700 10px "Familjen Grotesk", system-ui, sans-serif; fill: #fff; text-anchor: middle; pointer-events: none; }
+.activeLabel { font: 700 10px "Familjen Grotesk", system-ui, sans-serif; fill: #fff; text-anchor: middle; pointer-events: none; }
 
 /* Guitar */
 #guitar { min-width: 760px; }

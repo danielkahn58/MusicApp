@@ -1,7 +1,8 @@
 // Small typed state store. Preferences (tuning, flats, sensitivity) persist
-// to localStorage; curMidi/uiState do not.
+// to localStorage; curMidi/activeChord/uiState do not.
 
 import { DEFAULT_TUNING, findTuning, type Tuning } from '../music/tunings';
+import { chordTones, type Chord } from '../music/chords';
 import type { UIState } from './readout';
 
 const storage = {
@@ -24,6 +25,7 @@ const storage = {
 
 export interface AppState {
   curMidi: number | null;
+  activeChord: Chord | null;
   uiState: UIState;
   tuning: Tuning;
   useFlats: boolean;
@@ -33,11 +35,19 @@ export interface AppState {
 export function loadInitialState(): AppState {
   return {
     curMidi: null,
+    activeChord: null,
     uiState: 'empty',
     tuning: findTuning(storage.get('sn-tuning', DEFAULT_TUNING.id)),
     useFlats: storage.get('sn-flats', '0') === '1',
     sensitivity: parseInt(storage.get('sn-sens', '6'), 10),
   };
+}
+
+/** The concrete MIDI notes currently on display: a chord's tones, a single sung/tapped note, or none. */
+export function activeMidis(state: AppState): number[] {
+  if (state.activeChord) return chordTones(state.activeChord);
+  if (state.curMidi !== null) return [state.curMidi];
+  return [];
 }
 
 export function saveTuning(id: string): void {

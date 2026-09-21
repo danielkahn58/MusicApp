@@ -1,14 +1,16 @@
 // The big note readout: name, Hz, cents meter, status line, and alert box.
 
 import { midiToFreq, octaveOf, pitchClassName } from '../music/notes';
+import type { Chord } from '../music/chords';
 
-export type UIState = 'empty' | 'live' | 'held' | 'picked';
+export type UIState = 'empty' | 'live' | 'held' | 'picked' | 'chord';
 
 const STATUS_TEXT: Record<UIState, string> = {
-  empty: 'Press Start, then sing a note. You can also tap a piano key.',
+  empty: 'Press Start, then sing a note. You can also tap a piano key or pick a chord.',
   live: 'Listening.',
   held: 'Last note. Sing again to update.',
   picked: 'Tapped note. Sing to switch to your voice.',
+  chord: 'Chord picked. Sing to switch to your voice.',
 };
 
 export interface ReadoutElements {
@@ -31,8 +33,17 @@ export function setUIState(els: ReadoutElements, state: UIState, override?: stri
   if (state !== 'live') els.meterEl.classList.add('off');
 }
 
-export function renderNoteName(els: ReadoutElements, curMidi: number | null, useFlats: boolean): void {
-  if (curMidi === null) {
+export function renderNoteName(
+  els: ReadoutElements,
+  curMidi: number | null,
+  activeChord: Chord | null,
+  useFlats: boolean,
+): void {
+  if (activeChord) {
+    els.noteNameEl.textContent = pitchClassName(activeChord.root, useFlats);
+    els.noteOctEl.textContent = activeChord.quality === 'minor' ? 'm' : '';
+    els.playBtn.disabled = false;
+  } else if (curMidi === null) {
     els.noteNameEl.textContent = '–';
     els.noteOctEl.textContent = '';
     els.playBtn.disabled = true;

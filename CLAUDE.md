@@ -8,8 +8,11 @@ Vite + TypeScript, no framework. `src/main.ts` is wiring only: it looks up DOM n
 builds the piano/fretboard SVGs, and connects pure logic to UI renderers. Everything
 that can be pure is pure:
 
-- `music/notes.ts`, `music/tunings.ts`, `music/fretboard-positions.ts` — MIDI/note
-  math and fretboard geometry, no DOM.
+- `music/notes.ts`, `music/tunings.ts`, `music/chords.ts`, `music/fretboard-positions.ts`
+  — MIDI/note math, chord data, and fretboard geometry, no DOM.
+  `fretboard-positions.ts` and the piano/fretboard renderers all take an array of
+  target MIDI notes (`number[]`), not a single note — one note for singing/tapping,
+  several for a chord. Same code path for both; don't fork it.
 - `audio/yin.ts` — the YIN pitch detector, takes a `Float32Array` + sample rate,
   returns `{ freq, clarity } | null`. No DOM.
 - `audio/stabilizer.ts` — turns a stream of raw frequency estimates into a stable
@@ -24,8 +27,15 @@ Everything else is intentionally impure and un(der)tested by design:
 - `audio/tone.ts` — the playback oscillator, and owns the single shared
   `AudioContext` (mic.ts imports `ensureAudioContext` from here so mic input and tone
   playback share one context, matching how the original reference worked).
-- `ui/*.ts` — builds and updates the SVG piano/fretboard, the note readout, and the
-  controls. Take data in, render it; no logic that would need a unit test lives here.
+- `ui/*.ts` — builds and updates the SVG piano/fretboard, the note readout, the
+  controls, and the chord sidebar (`ui/chord-sidebar.ts`). Take data in, render it; no
+  logic that would need a unit test lives here.
+
+State: `ui/state.ts`'s `AppState` holds `curMidi` (sung/tapped note) and
+`activeChord` as mutually exclusive — picking one clears the other (`main.ts`'s
+`showNote`/`pickChord`). `activeMidis(state)` derives the actual MIDI notes to
+highlight/play from whichever is set (via `chordTones()` for a chord), and is what
+`render()` passes to the piano/fretboard renderers.
 
 ## Commands
 

@@ -27,21 +27,35 @@ export function resumeAudioContext(): AudioContext {
   return c;
 }
 
+function playOscillator(ctx: AudioContext, freq: number): void {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = freq;
+  const t = ctx.currentTime;
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.linearRampToValueAtTime(0.25, t + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 1.5);
+}
+
 export function playTone(midi: number): void {
   try {
     const c = resumeAudioContext();
-    const osc = c.createOscillator();
-    const gain = c.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = midiToFreq(midi);
-    const t = c.currentTime;
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.linearRampToValueAtTime(0.25, t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
-    osc.connect(gain);
-    gain.connect(c.destination);
-    osc.start(t);
-    osc.stop(t + 1.5);
+    playOscillator(c, midiToFreq(midi));
+  } catch {
+    // audio unavailable; nothing to do
+  }
+}
+
+/** Plays several notes at once (e.g. a chord) as simultaneous oscillators. */
+export function playChord(midis: number[]): void {
+  try {
+    const c = resumeAudioContext();
+    for (const midi of midis) playOscillator(c, midiToFreq(midi));
   } catch {
     // audio unavailable; nothing to do
   }

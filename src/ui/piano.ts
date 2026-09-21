@@ -15,7 +15,7 @@ const BLACK_H = 92;
 export interface Piano {
   svg: SVGSVGElement;
   keyEls: Map<number, SVGRectElement>;
-  activeLabel: SVGTextElement;
+  activeLabelsGroup: SVGGElement;
 }
 
 export function buildPiano(svg: SVGSVGElement): Piano {
@@ -27,6 +27,7 @@ export function buildPiano(svg: SVGSVGElement): Piano {
   const gWhite = svgEl('g', {}, svg);
   const gBlack = svgEl('g', {}, svg);
   const gLabels = svgEl('g', {}, svg);
+  const gActive = svgEl('g', {}, svg);
 
   const keyEls = new Map<number, SVGRectElement>();
   const blacks: { midi: number; x: number }[] = [];
@@ -57,44 +58,47 @@ export function buildPiano(svg: SVGSVGElement): Piano {
     keyEls.set(b.midi, rect);
   }
 
-  const activeLabel = svgEl('text', { id: 'activeLabel', x: 0, y: 0 }, gLabels);
-
-  return { svg, keyEls, activeLabel };
+  return { svg, keyEls, activeLabelsGroup: gActive };
 }
 
-export function renderPiano(
-  piano: Piano,
-  hintEl: HTMLElement,
-  curMidi: number | null,
-  useFlats: boolean,
-): void {
+// midis: 0 notes (nothing active), 1 note (sung/tapped), or several (a chord).
+export function renderPiano(piano: Piano, hintEl: HTMLElement, midis: number[], useFlats: boolean): void {
+  const activeSet = new Set(midis);
+  const activeClasses = new Set(midis.map((m) => ((m % 12) + 12) % 12));
+
   for (const [midi, el] of piano.keyEls) {
     const base = isBlackKey(midi) ? 'bkey' : 'wkey';
     let cls = base;
-    if (curMidi !== null) {
-      if (midi === curMidi) cls += ' on';
-      else if (((midi % 12) + 12) % 12 === (((curMidi % 12) + 12) % 12)) cls += ' echo';
-    }
+    if (activeSet.has(midi)) cls += ' on';
+    else if (activeClasses.has(((midi % 12) + 12) % 12)) cls += ' echo';
     el.setAttribute('class', cls);
   }
 
-  piano.activeLabel.textContent = '';
-  if (curMidi === null) {
+  piano.activeLabelsGroup.textContent = '';
+  for (const midi of midis) {
+    if (midi < PIANO_LOW || midi > PIANO_HIGH) continue;
+    const rect = piano.keyEls.get(midi);
+    if (!rect) continue;
+    const x = parseFloat(rect.getAttribute('x')!) + parseFloat(rect.getAttribute('width')!) / 2;
+    const y = isBlackKey(midi) ? BLACK_H - 10 : WHITE_H - 24;
+    const label = svgEl('text', { class: 'activeLabel', x, y }, piano.activeLabelsGroup);
+    label.textContent = pitchClassName(midi, useFlats);
+  }
+
+  if (midis.length === 0) {
     hintEl.textContent = '';
     return;
   }
-  if (curMidi < PIANO_LOW || curMidi > PIANO_HIGH) {
-    hintEl.textContent = `${pitchClassName(curMidi, useFlats)}${octaveOf(curMidi)} is outside this keyboard (${pitchClassName(PIANO_LOW, useFlats)}${octaveOf(PIANO_LOW)} to ${pitchClassName(PIANO_HIGH, useFlats)}${octaveOf(PIANO_HIGH)}).`;
+  const lowName = `${pitchClassName(PIANO_LOW, useFlats)}${octaveOf(PIANO_LOW)}`;
+  const highName = `${pitchClassName(PIANO_HIGH, useFlats)}${octaveOf(PIANO_HIGH)}`;
+  const outside = midis.filter((m) => m < PIANO_LOW || m > PIANO_HIGH);
+  if (outside.length === 0) {
+    hintEl.textContent = '';
     return;
   }
-  hintEl.textContent = '';
-  const rect = piano.keyEls.get(curMidi);
-  if (!rect) return;
-  const x = parseFloat(rect.getAttribute('x')!) + parseFloat(rect.getAttribute('width')!) / 2;
-  const y = isBlackKey(curMidi) ? BLACK_H - 10 : WHITE_H - 24;
-  piano.activeLabel.setAttribute('x', String(x));
-  piano.activeLabel.setAttribute('y', String(y));
-  piano.activeLabel.textContent = pitchClassName(curMidi, useFlats);
+  const names = outside.map((m) => `${pitchClassName(m, useFlats)}${octaveOf(m)}`).join(', ');
+  const verb = outside.length > 1 ? 'are' : 'is';
+  hintEl.textContent = `${names} ${verb} outside this keyboard (${lowName} to ${highName}).`;
 }
 
 export function centerPianoOn(wrap: Element, piano: Piano, midi: number, reduceMotion: boolean): void {

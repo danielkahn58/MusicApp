@@ -3,7 +3,8 @@
 A browser tool for a singer/composer: sing a note into the microphone and see it as a
 note name, frequency, cents-in-tune meter, a 61-key piano (C2–C7), and a guitar
 fretboard (frets 0–17, any of 7 tunings). Tap a piano key to hear it and locate it,
-even without a microphone.
+even without a microphone. A sidebar lists all 12 major and 12 minor chords — tap one
+to hear it and see all three notes on both instruments at once.
 
 Built with Vite + TypeScript, no UI framework — the DOM here is small and the
 instruments are generated SVG, so a framework would add weight without adding
@@ -51,12 +52,14 @@ src/
   music/
     notes.ts                    MIDI <-> name/frequency, sharps/flats, cents
     tunings.ts                  tuning definitions (data only)
-    fretboard-positions.ts      pure: (tuning, midi, frets) -> exact[] + echoes[]
+    chords.ts                   chord data (12 major + 12 minor) and tone/name helpers
+    fretboard-positions.ts      pure: (tuning, midis[], frets) -> exact[] + echoes[]
   ui/
     piano.ts                    builds/updates the SVG keyboard
     fretboard.ts                builds/updates the SVG fretboard
-    readout.ts                  note, Hz, cents meter, status, alert
+    readout.ts                  note/chord name, Hz, cents meter, status, alert
     controls.ts                 tuning select, accidentals, sensitivity, hear button
+    chord-sidebar.ts            builds/updates the chord sidebar buttons
     state.ts                    small typed state store + localStorage persistence
     svg.ts                      tiny SVG element helper + scroll-into-view
   styles/
@@ -81,6 +84,8 @@ Each lives in one obvious place:
   `src/audio/stabilizer.ts` (`HOLD_TIMEOUT_MS` and the two constants at the top of the
   file for history size / consensus frames).
 - **Tunings**: `src/music/tunings.ts` — add a tuning.
+- **Chord root octave**: `CHORD_ROOT_OCTAVE_MIDI` in `src/music/chords.ts` — which
+  octave the sidebar builds triads on.
 - **Colors**: `src/styles/tokens.css` — CSS custom properties, light and dark.
 
 ### Adding a guitar tuning

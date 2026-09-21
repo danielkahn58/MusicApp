@@ -5,9 +5,10 @@ import './styles/tokens.css';
 import './styles/app.css';
 
 import { TUNINGS, findTuning } from './music/tunings';
+import { MAJOR_CHORDS, MINOR_CHORDS, chordTones, type Chord } from './music/chords';
 import { Stabilizer } from './audio/stabilizer';
 import { createMicController, sensitivityGate, type MicHandlers } from './audio/mic';
-import { playTone, TONE_MUTE_MS } from './audio/tone';
+import { playTone, playChord, TONE_MUTE_MS } from './audio/tone';
 import { buildPiano, renderPiano, centerPianoOn } from './ui/piano';
 import { buildFretboard, renderFretboard, centerFretboardOn } from './ui/fretboard';
 import {
@@ -21,7 +22,23 @@ import {
   type UIState,
 } from './ui/readout';
 import { setupControls, applyAccidentals, type ControlsElements } from './ui/controls';
-import { createStore, loadInitialState, saveTuning, saveFlats, saveSensitivity } from './ui/state';
+import {
+  buildChordSidebar,
+  relabelChordButtons,
+  setActiveChordButton,
+  type ChordSidebarElements,
+} from './ui/chord-sidebar';
+import {
+  createStore,
+  loadInitialState,
+  activeMidis,
+  saveTuning,
+  saveFlats,
+  saveSensitivity,
+  type AppState,
+} from './ui/state';
+
+const ALL_CHORDS: Chord[] = [...MAJOR_CHORDS, ...MINOR_CHORDS];
 
 const $ = <T extends Element>(selector: string): T => document.querySelector(selector) as T;
 
@@ -50,6 +67,11 @@ const controlsEls: ControlsElements = {
   playBtn: $('#playBtn'),
 };
 
+const chordEls: ChordSidebarElements = {
+  majorGrid: $('#majorChords'),
+  minorGrid: $('#minorChords'),
+};
+
 const pianoWrap = $('#pianoWrap');
 const pianoHintEl = $<HTMLElement>('#pianoNote');
 const guitarWrap = $('#guitarWrap');
@@ -62,6 +84,8 @@ const fretboard = buildFretboard($('#guitar'));
 const store = createStore(loadInitialState());
 const stabilizer = new Stabilizer();
 
+const chordButtons = buildChordSidebar(chordEls, MAJOR_CHORDS, MINOR_CHORDS, store.get().useFlats, pickChord);
+
 function setState(state: UIState, override?: string): void {
   store.set({ uiState: state });
   setUIState(readoutEls, state, override);
@@ -69,14 +93,17 @@ function setState(state: UIState, override?: string): void {
 
 function render(): SVGCircleElement | null {
   const s = store.get();
-  renderNoteName(readoutEls, s.curMidi, s.useFlats);
-  renderPiano(piano, pianoHintEl, s.curMidi, s.useFlats);
-  return renderFretboard(fretboard, guitarHintEl, s.tuning, s.curMidi, s.useFlats);
+  const midis = activeMidis(s);
+  renderNoteName(readoutEls, s.curMidi, s.activeChord, s.useFlats);
+  renderPiano(piano, pianoHintEl, midis, s.useFlats);
+  return renderFretboard(fretboard, guitarHintEl, s.tuning, midis, s.useFlats);
 }
 
 function showNote(midi: number, centerScrollers: boolean): void {
-  const changed = store.get().curMidi !== midi;
-  store.set({ curMidi: midi });
+  const prev = store.get();
+  const changed = prev.curMidi !== midi || prev.activeChord !== null;
+  store.set({ curMidi: midi, activeChord: null });
+  if (prev.activeChord !== null) setActiveChordButton(chordButtons, null);
   const firstDot = render();
   if (changed && centerScrollers) {
     centerPianoOn(pianoWrap, piano, midi, reduceMotion);
@@ -89,6 +116,19 @@ function pickNote(midi: number): void {
   setState('picked');
   clearCents(readoutEls, midi);
   playTone(midi);
+  mic.muteFor(TONE_MUTE_MS);
+}
+
+function pickChord(chord: Chord): void {
+  store.set({ curMidi: null, activeChord: chord });
+  setActiveChordButton(chordButtons, chord);
+  setState('chord');
+  clearCents(readoutEls, null);
+  const firstDot = render();
+  const midis = chordTones(chord);
+  centerPianoOn(pianoWrap, piano, midis[0], reduceMotion);
+  centerFretboardOn(guitarWrap, firstDot, reduceMotion);
+  playChord(midis);
   mic.muteFor(TONE_MUTE_MS);
 }
 
@@ -124,14 +164,19 @@ const micHandlers: MicHandlers = {
       startBtn.disabled = false;
       startBtn.textContent = 'Stop';
       startBtn.classList.add('ghost');
-      setState(store.get().curMidi === null ? 'empty' : 'held', 'Listening. Sing a steady note.');
+      setState(defaultUiState(store.get()), 'Listening. Sing a steady note.');
     } else {
       resetStartButton();
-      setState(store.get().curMidi === null ? 'empty' : 'held', 'Microphone off.');
+      setState(defaultUiState(store.get()), 'Microphone off.');
       setLevel(readoutEls, 0);
     }
   },
 };
+
+function defaultUiState(s: AppState): UIState {
+  if (s.activeChord) return 'chord';
+  return s.curMidi === null ? 'empty' : 'held';
+}
 
 const mic = createMicController(() => sensitivityGate(store.get().sensitivity), micHandlers);
 
@@ -166,6 +211,7 @@ setupControls(
       store.set({ useFlats });
       saveFlats(useFlats);
       applyAccidentals(controlsEls, useFlats);
+      relabelChordButtons(chordButtons, ALL_CHORDS, useFlats);
       render();
     },
     onSensitivityChange(value) {
@@ -173,9 +219,12 @@ setupControls(
       saveSensitivity(value);
     },
     onPlay() {
-      const midi = store.get().curMidi;
-      if (midi !== null) {
-        playTone(midi);
+      const s = store.get();
+      if (s.activeChord) {
+        playChord(chordTones(s.activeChord));
+        mic.muteFor(TONE_MUTE_MS);
+      } else if (s.curMidi !== null) {
+        playTone(s.curMidi);
         mic.muteFor(TONE_MUTE_MS);
       }
     },

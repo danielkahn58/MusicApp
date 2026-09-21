@@ -9,64 +9,79 @@
 <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<main>
-  <header>
-    <h1>Sing a note</h1>
-    <button class="btn" id="startBtn" type="button">Start listening</button>
-  </header>
-
-  <p class="alert" id="alert" role="alert" hidden></p>
-
-  <div class="readout" id="readout" data-state="empty">
-    <div class="note" id="note" aria-live="polite"><span id="noteName">–</span><span class="oct" id="noteOct"></span></div>
-    <div class="meta">
-      <div class="hz" id="hz"></div>
-      <div class="meter off" id="meter" aria-hidden="true"><div class="zone"></div><div class="needle" id="needle"></div></div>
-      <div class="scale" aria-hidden="true"><span>flat</span><span>sharp</span></div>
-      <div class="verdict" id="verdict"></div>
-      <p class="status" id="status">Press Start, then sing a note. You can also tap a piano key.</p>
-      <div class="level" aria-hidden="true"><i id="level"></i></div>
+<div class="layout">
+  <aside class="chords" aria-label="Chords">
+    <h2>Chords</h2>
+    <p class="hint">Tap a chord to hear it and see it on the piano and guitar.</p>
+    <div class="chord-group">
+      <h3>Major</h3>
+      <div class="chord-grid" id="majorChords"></div>
     </div>
-  </div>
-
-  <section>
-    <h2>Piano</h2>
-    <p class="hint" id="pianoNote"></p>
-    <div class="scroller" id="pianoWrap">
-      <svg id="piano" role="img" aria-label="Piano keyboard, C2 to C7"></svg>
+    <div class="chord-group">
+      <h3>Minor</h3>
+      <div class="chord-grid" id="minorChords"></div>
     </div>
-  </section>
+  </aside>
 
-  <section>
-    <h2>Guitar</h2>
-    <p class="hint" id="spots">Sing or tap a key to see where the note lives.</p>
-    <div class="scroller" id="guitarWrap">
-      <svg id="guitar" role="img" aria-label="Guitar fretboard, frets 0 to 17"></svg>
+  <main>
+    <header>
+      <h1>Sing a note</h1>
+      <button class="btn" id="startBtn" type="button">Start listening</button>
+    </header>
+
+    <p class="alert" id="alert" role="alert" hidden></p>
+
+    <div class="readout" id="readout" data-state="empty">
+      <div class="note" id="note" aria-live="polite"><span id="noteName">–</span><span class="oct" id="noteOct"></span></div>
+      <div class="meta">
+        <div class="hz" id="hz"></div>
+        <div class="meter off" id="meter" aria-hidden="true"><div class="zone"></div><div class="needle" id="needle"></div></div>
+        <div class="scale" aria-hidden="true"><span>flat</span><span>sharp</span></div>
+        <div class="verdict" id="verdict"></div>
+        <p class="status" id="status">Press Start, then sing a note. You can also tap a piano key or pick a chord.</p>
+        <div class="level" aria-hidden="true"><i id="level"></i></div>
+      </div>
     </div>
-  </section>
 
-  <section class="controls">
-    <label class="field">Guitar tuning
-      <select id="tuning"></select>
-    </label>
-    <div class="field">Accidentals
-      <span class="seg" role="group" aria-label="Accidentals">
-        <button type="button" id="sharpBtn" aria-pressed="true">Sharps ♯</button>
-        <button type="button" id="flatBtn" aria-pressed="false">Flats ♭</button>
-      </span>
-    </div>
-    <label class="field">Mic sensitivity
-      <input type="range" id="sens" min="1" max="10" value="6">
-    </label>
-    <button class="btn ghost" id="playBtn" type="button" disabled>Hear this note</button>
-  </section>
+    <section>
+      <h2>Piano</h2>
+      <p class="hint" id="pianoNote"></p>
+      <div class="scroller" id="pianoWrap">
+        <svg id="piano" role="img" aria-label="Piano keyboard, C2 to C7"></svg>
+      </div>
+    </section>
 
-  <p class="foot">
-    Filled dots and keys are the exact pitch you sang.
-    <span class="legend"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5" fill="none" stroke="#2F52F5" stroke-width="2.5"/></svg></span>
-    Rings and tinted keys are the same note in another octave. Guitar positions use the sounding pitch; guitar music is written an octave higher than it sounds.
-  </p>
-</main>
+    <section>
+      <h2>Guitar</h2>
+      <p class="hint" id="spots">Sing or tap a key, or pick a chord, to see where the note lives.</p>
+      <div class="scroller" id="guitarWrap">
+        <svg id="guitar" role="img" aria-label="Guitar fretboard, frets 0 to 17"></svg>
+      </div>
+    </section>
+
+    <section class="controls">
+      <label class="field">Guitar tuning
+        <select id="tuning"></select>
+      </label>
+      <div class="field">Accidentals
+        <span class="seg" role="group" aria-label="Accidentals">
+          <button type="button" id="sharpBtn" aria-pressed="true">Sharps ♯</button>
+          <button type="button" id="flatBtn" aria-pressed="false">Flats ♭</button>
+        </span>
+      </div>
+      <label class="field">Mic sensitivity
+        <input type="range" id="sens" min="1" max="10" value="6">
+      </label>
+      <button class="btn ghost" id="playBtn" type="button" disabled>Hear this note</button>
+    </section>
+
+    <p class="foot">
+      Filled dots and keys are the exact pitch you sang, tapped, or picked from a chord.
+      <span class="legend"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5" fill="none" stroke="#2F52F5" stroke-width="2.5"/></svg></span>
+      Rings and tinted keys are the same note in another octave. Guitar positions use the sounding pitch; guitar music is written an octave higher than it sounds.
+    </p>
+  </main>
+</div>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

@@ -1,8 +1,9 @@
-// Small typed state store. Preferences (tuning, flats, sensitivity) persist
-// to localStorage; curMidi/activeChord/uiState do not.
+// Small typed state store. Preferences (tuning, flats, sensitivity,
+// instrument) persist to localStorage; curMidi/activeChord/uiState do not.
 
 import { DEFAULT_TUNING, findTuning, type Tuning } from '../music/tunings';
 import { chordTones, type Chord } from '../music/chords';
+import type { Instrument } from '../audio/tone';
 import type { UIState } from './readout';
 
 const storage = {
@@ -30,6 +31,7 @@ export interface AppState {
   tuning: Tuning;
   useFlats: boolean;
   sensitivity: number;
+  instrument: Instrument;
 }
 
 export function loadInitialState(): AppState {
@@ -40,6 +42,7 @@ export function loadInitialState(): AppState {
     tuning: findTuning(storage.get('sn-tuning', DEFAULT_TUNING.id)),
     useFlats: storage.get('sn-flats', '0') === '1',
     sensitivity: parseInt(storage.get('sn-sens', '6'), 10),
+    instrument: storage.get('sn-instrument', 'piano') === 'guitar' ? 'guitar' : 'piano',
   };
 }
 
@@ -58,6 +61,9 @@ export function saveFlats(useFlats: boolean): void {
 }
 export function saveSensitivity(value: number): void {
   storage.set('sn-sens', String(value));
+}
+export function saveInstrument(instrument: Instrument): void {
+  storage.set('sn-instrument', instrument);
 }
 
 export type Listener = (state: AppState) => void;

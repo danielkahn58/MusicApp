@@ -27,7 +27,9 @@ export function resumeAudioContext(): AudioContext {
   return c;
 }
 
-function playOscillator(ctx: AudioContext, freq: number): void {
+export type Instrument = 'piano' | 'guitar';
+
+function playPianoVoice(ctx: AudioContext, freq: number): void {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = 'triangle';
@@ -42,20 +44,51 @@ function playOscillator(ctx: AudioContext, freq: number): void {
   osc.stop(t + 1.5);
 }
 
-export function playTone(midi: number): void {
+// A plucked-string approximation: a brighter sawtooth run through a
+// lowpass filter whose cutoff starts high and decays quickly (the
+// harmonics of a plucked string die out faster than the fundamental),
+// with a quicker amplitude decay than the piano voice. Pure synthesis, no
+// sampled instruments anywhere in this app.
+function playGuitarVoice(ctx: AudioContext, freq: number): void {
+  const osc = ctx.createOscillator();
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.value = freq;
+  filter.type = 'lowpass';
+  filter.Q.value = 0.7;
+  const t = ctx.currentTime;
+  filter.frequency.setValueAtTime(Math.min(freq * 10, 9000), t);
+  filter.frequency.exponentialRampToValueAtTime(Math.max(freq * 1.5, 300), t + 0.35);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.linearRampToValueAtTime(0.3, t + 0.006);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 1.2);
+}
+
+function playVoice(ctx: AudioContext, freq: number, instrument: Instrument): void {
+  if (instrument === 'guitar') playGuitarVoice(ctx, freq);
+  else playPianoVoice(ctx, freq);
+}
+
+export function playTone(midi: number, instrument: Instrument = 'piano'): void {
   try {
     const c = resumeAudioContext();
-    playOscillator(c, midiToFreq(midi));
+    playVoice(c, midiToFreq(midi), instrument);
   } catch {
     // audio unavailable; nothing to do
   }
 }
 
 /** Plays several notes at once (e.g. a chord) as simultaneous oscillators. */
-export function playChord(midis: number[]): void {
+export function playChord(midis: number[], instrument: Instrument = 'piano'): void {
   try {
     const c = resumeAudioContext();
-    for (const midi of midis) playOscillator(c, midiToFreq(midi));
+    for (const midi of midis) playVoice(c, midiToFreq(midi), instrument);
   } catch {
     // audio unavailable; nothing to do
   }

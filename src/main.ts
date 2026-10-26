@@ -6,6 +6,7 @@ import './styles/app.css';
 
 import { TUNINGS, findTuning } from './music/tunings';
 import { MAJOR_CHORDS, MINOR_CHORDS, chordTones, type Chord } from './music/chords';
+import { DEFAULT_OCTAVE_MIDI } from './music/notes';
 import { Stabilizer } from './audio/stabilizer';
 import { createMicController, sensitivityGate, type MicHandlers } from './audio/mic';
 import { playTone, playChord, TONE_MUTE_MS } from './audio/tone';
@@ -21,19 +22,21 @@ import {
   type ReadoutElements,
   type UIState,
 } from './ui/readout';
-import { setupControls, applyAccidentals, type ControlsElements } from './ui/controls';
+import { setupControls, applyAccidentals, applyInstrument, type ControlsElements } from './ui/controls';
 import {
   buildChordSidebar,
   relabelChordButtons,
   setActiveChordButton,
   type ChordSidebarElements,
 } from './ui/chord-sidebar';
+import { buildNoteSidebar, relabelNoteButtons, setActiveNoteButton, type NoteSidebarElements } from './ui/note-sidebar';
 import {
   createStore,
   loadInitialState,
   activeMidis,
   saveTuning,
   saveFlats,
+  saveInstrument,
   saveSensitivity,
   type AppState,
 } from './ui/state';
@@ -63,6 +66,8 @@ const controlsEls: ControlsElements = {
   tuningEl: $('#tuning'),
   sharpBtn: $('#sharpBtn'),
   flatBtn: $('#flatBtn'),
+  pianoBtn: $('#pianoBtn'),
+  guitarBtn: $('#guitarBtn'),
   sensEl: $('#sens'),
   playBtn: $('#playBtn'),
 };
@@ -70,6 +75,10 @@ const controlsEls: ControlsElements = {
 const chordEls: ChordSidebarElements = {
   majorGrid: $('#majorChords'),
   minorGrid: $('#minorChords'),
+};
+
+const noteEls: NoteSidebarElements = {
+  grid: $('#notesGrid'),
 };
 
 const pianoWrap = $('#pianoWrap');
@@ -85,6 +94,7 @@ const store = createStore(loadInitialState());
 const stabilizer = new Stabilizer();
 
 const chordButtons = buildChordSidebar(chordEls, MAJOR_CHORDS, MINOR_CHORDS, store.get().useFlats, pickChord);
+const noteButtons = buildNoteSidebar(noteEls, store.get().useFlats, (pc) => pickNote(DEFAULT_OCTAVE_MIDI + pc));
 
 function setState(state: UIState, override?: string): void {
   store.set({ uiState: state });
@@ -96,7 +106,10 @@ function render(): SVGCircleElement | null {
   const midis = activeMidis(s);
   renderNoteName(readoutEls, s.curMidi, s.activeChord, s.useFlats);
   renderPiano(piano, pianoHintEl, midis, s.useFlats);
-  return renderFretboard(fretboard, guitarHintEl, s.tuning, midis, s.useFlats);
+  const firstDot = renderFretboard(fretboard, guitarHintEl, s.tuning, midis, s.useFlats);
+  const activePc = s.activeChord === null && s.curMidi !== null ? (((s.curMidi % 12) + 12) % 12) : null;
+  setActiveNoteButton(noteButtons, activePc);
+  return firstDot;
 }
 
 function showNote(midi: number, centerScrollers: boolean): void {
@@ -115,7 +128,7 @@ function pickNote(midi: number): void {
   showNote(midi, true);
   setState('picked');
   clearCents(readoutEls, midi);
-  playTone(midi);
+  playTone(midi, store.get().instrument);
   mic.muteFor(TONE_MUTE_MS);
 }
 
@@ -128,7 +141,7 @@ function pickChord(chord: Chord): void {
   const midis = chordTones(chord);
   centerPianoOn(pianoWrap, piano, midis[0], reduceMotion);
   centerFretboardOn(guitarWrap, firstDot, reduceMotion);
-  playChord(midis);
+  playChord(midis, store.get().instrument);
   mic.muteFor(TONE_MUTE_MS);
 }
 
@@ -207,7 +220,12 @@ startBtn.addEventListener('click', () => {
 setupControls(
   controlsEls,
   TUNINGS,
-  { tuningId: store.get().tuning.id, useFlats: store.get().useFlats, sensitivity: store.get().sensitivity },
+  {
+    tuningId: store.get().tuning.id,
+    useFlats: store.get().useFlats,
+    instrument: store.get().instrument,
+    sensitivity: store.get().sensitivity,
+  },
   {
     onTuningChange(id) {
       store.set({ tuning: findTuning(id) });
@@ -219,7 +237,13 @@ setupControls(
       saveFlats(useFlats);
       applyAccidentals(controlsEls, useFlats);
       relabelChordButtons(chordButtons, ALL_CHORDS, useFlats);
+      relabelNoteButtons(noteButtons, useFlats);
       render();
+    },
+    onInstrumentChange(instrument) {
+      store.set({ instrument });
+      saveInstrument(instrument);
+      applyInstrument(controlsEls, instrument);
     },
     onSensitivityChange(value) {
       store.set({ sensitivity: value });
@@ -228,10 +252,10 @@ setupControls(
     onPlay() {
       const s = store.get();
       if (s.activeChord) {
-        playChord(chordTones(s.activeChord));
+        playChord(chordTones(s.activeChord), s.instrument);
         mic.muteFor(TONE_MUTE_MS);
       } else if (s.curMidi !== null) {
-        playTone(s.curMidi);
+        playTone(s.curMidi, s.instrument);
         mic.muteFor(TONE_MUTE_MS);
       }
     },

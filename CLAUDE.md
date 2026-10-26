@@ -9,7 +9,9 @@ builds the piano/fretboard SVGs, and connects pure logic to UI renderers. Everyt
 that can be pure is pure:
 
 - `music/notes.ts`, `music/tunings.ts`, `music/chords.ts`, `music/fretboard-positions.ts`
-  — MIDI/note math, chord data, and fretboard geometry, no DOM.
+  — MIDI/note math, chord data, and fretboard geometry, no DOM. `notes.ts` owns
+  `DEFAULT_OCTAVE_MIDI` (C4) — the octave anything "named only" (a chord, or a plain
+  note from the Notes sidebar) gets built on, since neither specifies an octave itself.
   `fretboard-positions.ts` and the piano/fretboard renderers all take an array of
   target MIDI notes (`number[]`), not a single note — one note for singing/tapping,
   several for a chord. Same code path for both; don't fork it.
@@ -24,18 +26,27 @@ Everything else is intentionally impure and un(der)tested by design:
 
 - `audio/mic.ts` — `getUserMedia`, the `AnalyserNode` polling loop (every ~40ms),
   RMS gating, and error-message mapping. Calls into `yin.ts` for detection.
-- `audio/tone.ts` — the playback oscillator, and owns the single shared
+- `audio/tone.ts` — the playback oscillators, and owns the single shared
   `AudioContext` (mic.ts imports `ensureAudioContext` from here so mic input and tone
-  playback share one context, matching how the original reference worked).
+  playback share one context, matching how the original reference worked). Two
+  synthesized voices — `playPianoVoice`/`playGuitarVoice` — selected per call via an
+  `Instrument` (`'piano' | 'guitar'`) parameter on `playTone`/`playChord`; both are
+  pure synthesis (oscillator + envelope, the guitar voice adds a decaying lowpass
+  filter for a plucked-string "twang"), there are no sampled instruments anywhere.
 - `ui/*.ts` — builds and updates the SVG piano/fretboard, the note readout, the
-  controls, and the chord sidebar (`ui/chord-sidebar.ts`). Take data in, render it; no
-  logic that would need a unit test lives here.
+  controls, the chord sidebar (`ui/chord-sidebar.ts`), and the notes sidebar
+  (`ui/note-sidebar.ts`). Take data in, render it; no logic that would need a unit
+  test lives here.
 
-State: `ui/state.ts`'s `AppState` holds `curMidi` (sung/tapped note) and
+State: `ui/state.ts`'s `AppState` holds `curMidi` (sung/tapped/clicked note) and
 `activeChord` as mutually exclusive — picking one clears the other (`main.ts`'s
 `showNote`/`pickChord`). `activeMidis(state)` derives the actual MIDI notes to
 highlight/play from whichever is set (via `chordTones()` for a chord), and is what
-`render()` passes to the piano/fretboard renderers.
+`render()` passes to the piano/fretboard renderers. The notes sidebar's active button
+is *derived* each render from `curMidi % 12` (not tracked separately) — a plain note's
+pitch class is always recoverable from its MIDI number, unlike a chord.
+`AppState.instrument` picks which `tone.ts` voice plays, persisted like the other
+preferences.
 
 ## Commands
 

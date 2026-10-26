@@ -3,6 +3,11 @@
 export const SHARP_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'] as const;
 export const FLAT_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'] as const;
 
+// The octave anything "named only" (a plain note or a chord, with no
+// octave specified) is built on — keeps things centered on the keyboard
+// and within reach of the guitar's open position.
+export const DEFAULT_OCTAVE_MIDI = 60; // C4
+
 const BLACK_PITCH_CLASSES = new Set([1, 3, 6, 8, 10]);
 
 export function pitchClassName(midi: number, useFlats: boolean): string {

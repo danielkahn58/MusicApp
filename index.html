@@ -12,7 +12,7 @@
 <div class="layout">
   <aside class="chords" aria-label="Chords">
     <h2>Chords</h2>
-    <p class="hint">Tap a chord to hear it and see it on the piano and guitar.</p>
+    <p class="hint">Tap a chord or note to hear it and see it on the piano and guitar.</p>
     <div class="chord-group">
       <h3>Major</h3>
       <div class="chord-grid" id="majorChords"></div>
@@ -20,6 +20,10 @@
     <div class="chord-group">
       <h3>Minor</h3>
       <div class="chord-grid" id="minorChords"></div>
+    </div>
+    <div class="chord-group">
+      <h3>Notes</h3>
+      <div class="chord-grid" id="notesGrid"></div>
     </div>
   </aside>
 
@@ -67,6 +71,12 @@
         <span class="seg" role="group" aria-label="Accidentals">
           <button type="button" id="sharpBtn" aria-pressed="true">Sharps ♯</button>
           <button type="button" id="flatBtn" aria-pressed="false">Flats ♭</button>
+        </span>
+      </div>
+      <div class="field">Sound
+        <span class="seg" role="group" aria-label="Sound">
+          <button type="button" id="pianoBtn" aria-pressed="true">Piano</button>
+          <button type="button" id="guitarBtn" aria-pressed="false">Guitar</button>
         </span>
       </div>
       <label class="field">Mic sensitivity

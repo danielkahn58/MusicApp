@@ -1,12 +1,15 @@
-// Wires the tuning select, accidentals toggle, sensitivity slider, and
-// "Hear this note" button.
+// Wires the tuning select, accidentals toggle, sound (instrument) toggle,
+// sensitivity slider, and "Hear this note" button.
 
 import type { Tuning } from '../music/tunings';
+import type { Instrument } from '../audio/tone';
 
 export interface ControlsElements {
   tuningEl: HTMLSelectElement;
   sharpBtn: HTMLButtonElement;
   flatBtn: HTMLButtonElement;
+  pianoBtn: HTMLButtonElement;
+  guitarBtn: HTMLButtonElement;
   sensEl: HTMLInputElement;
   playBtn: HTMLButtonElement;
 }
@@ -14,6 +17,7 @@ export interface ControlsElements {
 export interface ControlsCallbacks {
   onTuningChange(tuningId: string): void;
   onAccidentalsChange(useFlats: boolean): void;
+  onInstrumentChange(instrument: Instrument): void;
   onSensitivityChange(value: number): void;
   onPlay(): void;
 }
@@ -21,6 +25,7 @@ export interface ControlsCallbacks {
 export interface ControlsInitial {
   tuningId: string;
   useFlats: boolean;
+  instrument: Instrument;
   sensitivity: number;
 }
 
@@ -46,10 +51,19 @@ export function setupControls(
   els.sharpBtn.addEventListener('click', () => callbacks.onAccidentalsChange(false));
   els.flatBtn.addEventListener('click', () => callbacks.onAccidentalsChange(true));
 
+  applyInstrument(els, initial.instrument);
+  els.pianoBtn.addEventListener('click', () => callbacks.onInstrumentChange('piano'));
+  els.guitarBtn.addEventListener('click', () => callbacks.onInstrumentChange('guitar'));
+
   els.playBtn.addEventListener('click', () => callbacks.onPlay());
 }
 
 export function applyAccidentals(els: ControlsElements, useFlats: boolean): void {
   els.sharpBtn.setAttribute('aria-pressed', String(!useFlats));
   els.flatBtn.setAttribute('aria-pressed', String(useFlats));
+}
+
+export function applyInstrument(els: ControlsElements, instrument: Instrument): void {
+  els.pianoBtn.setAttribute('aria-pressed', String(instrument === 'piano'));
+  els.guitarBtn.setAttribute('aria-pressed', String(instrument === 'guitar'));
 }

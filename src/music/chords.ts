@@ -1,6 +1,6 @@
 // Pure chord data and helpers. No DOM.
 
-import { pitchClassName } from './notes';
+import { pitchClassName, DEFAULT_OCTAVE_MIDI } from './notes';
 
 export type ChordQuality = 'major' | 'minor';
 
@@ -14,11 +14,7 @@ const CHORD_INTERVALS: Record<ChordQuality, readonly number[]> = {
   minor: [0, 3, 7],
 };
 
-// The octave the sidebar builds chords on: C4 and up keeps triads centered
-// on the keyboard and within reach of the guitar's open position.
-export const CHORD_ROOT_OCTAVE_MIDI = 60; // C4
-
-export function chordTones(chord: Chord, rootOctaveMidi: number = CHORD_ROOT_OCTAVE_MIDI): number[] {
+export function chordTones(chord: Chord, rootOctaveMidi: number = DEFAULT_OCTAVE_MIDI): number[] {
   const root = rootOctaveMidi + chord.root;
   return CHORD_INTERVALS[chord.quality].map((interval) => root + interval);
 }

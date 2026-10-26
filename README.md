@@ -2,9 +2,11 @@
 
 A browser tool for a singer/composer: sing a note into the microphone and see it as a
 note name, frequency, cents-in-tune meter, a 61-key piano (C2–C7), and a guitar
-fretboard (frets 0–17, any of 7 tunings). Tap a piano key to hear it and locate it,
-even without a microphone. A sidebar lists all 12 major and 12 minor chords — tap one
-to hear it and see all three notes on both instruments at once.
+fretboard (frets 0–17, any of 7 tunings). Tap a piano key, click a position on the
+guitar, or pick a plain note from the sidebar to hear it and locate it, even without a
+microphone. The sidebar also lists all 12 major and 12 minor chords — tap one to hear
+it and see all three notes on both instruments at once. A Piano/Guitar toggle picks
+which synthesized voice plays back.
 
 Built with Vite + TypeScript, no UI framework — the DOM here is small and the
 instruments are generated SVG, so a framework would add weight without adding
@@ -47,10 +49,10 @@ src/
   audio/
     yin.ts                      pure YIN pitch detector
     mic.ts                      getUserMedia, AudioContext, analyser loop, error mapping
-    tone.ts                     playback oscillator + shared AudioContext singleton
+    tone.ts                     two synthesized voices (piano/guitar) + shared AudioContext singleton
     stabilizer.ts                median + 3-frame note switching + hold logic (pure)
   music/
-    notes.ts                    MIDI <-> name/frequency, sharps/flats, cents
+    notes.ts                    MIDI <-> name/frequency, sharps/flats, cents, default octave
     tunings.ts                  tuning definitions (data only)
     chords.ts                   chord data (12 major + 12 minor) and tone/name helpers
     fretboard-positions.ts      pure: (tuning, midis[], frets) -> exact[] + echoes[]
@@ -58,8 +60,9 @@ src/
     piano.ts                    builds/updates the SVG keyboard
     fretboard.ts                builds/updates the SVG fretboard
     readout.ts                  note/chord name, Hz, cents meter, status, alert
-    controls.ts                 tuning select, accidentals, sensitivity, hear button
+    controls.ts                 tuning select, accidentals, sound toggle, sensitivity, hear button
     chord-sidebar.ts            builds/updates the chord sidebar buttons
+    note-sidebar.ts             builds/updates the plain-note sidebar buttons
     state.ts                    small typed state store + localStorage persistence
     svg.ts                      tiny SVG element helper + scroll-into-view
   styles/
@@ -84,8 +87,8 @@ Each lives in one obvious place:
   `src/audio/stabilizer.ts` (`HOLD_TIMEOUT_MS` and the two constants at the top of the
   file for history size / consensus frames).
 - **Tunings**: `src/music/tunings.ts` — add a tuning.
-- **Chord root octave**: `CHORD_ROOT_OCTAVE_MIDI` in `src/music/chords.ts` — which
-  octave the sidebar builds triads on.
+- **Default octave**: `DEFAULT_OCTAVE_MIDI` in `src/music/notes.ts` — which octave a
+  chord or a plain note (from either sidebar) gets built on.
 - **Colors**: `src/styles/tokens.css` — CSS custom properties, light and dark.
 
 ### Adding a guitar tuning
